@@ -2,6 +2,7 @@ require_relative 'time_format_handler'
 
 class App
   attr_accessor :status
+  attr_accessor :response
 
   def call(env)
     req = Rack::Request.new(env)
@@ -14,9 +15,10 @@ class App
   def request(req)
     case req.path_info
     when /time/
-      [@status, headers, body(req)]
+      @status = @time_format_handler.wrong_output.empty? ? 200 : 400
+      [@status, headers, body]
     else
-      [404, headers, ["Not found!\n"]]
+      [404, headers, ["Not found\n"]]
     end
 
   end
@@ -28,23 +30,12 @@ class App
   def params(req)
     params = req.params["format"].split(',')
 
-    output = Array.new(6)
-    wrong_output = []
-
-    TimeFormatHandler.params_handler(params, output, wrong_output)
-
-    if wrong_output.empty?
-      @status = 200
-      output.compact.join('-')
-    else
-      @status = 400
-      "Unknown time format #{wrong_output}"
-    end
-
+    @time_format_handler = TimeFormatHandler.new
+    @response = @time_format_handler.params_handler(params)
   end
 
-  def body(req)
-    ["#{params(req)}\n"]
+  def body
+    ["#{@response}\n"]
   end
 
 end

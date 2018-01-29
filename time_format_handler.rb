@@ -1,35 +1,26 @@
 class TimeFormatHandler
 
-  def self.params_handler(params, output, wrong_output)
-    params.each do |param|
-      index = param.index("=")
-      type = param[0...index]
-      select_params(param, type, output, wrong_output)
-    end
+  attr_accessor :output, :wrong_output
+
+  FORMATS = { "year" => { :value => "%Y", :order => 0 }, "month" => { :value => "%m", :order => 1 },
+              "day" => { :value => "%d", :order => 2 }, "hour" => { :value => "%H", :order => 3 },
+              "minute" => { :value => "%M", :order => 4 }, "second" => { :value => "%S",:order => 5 } }.freeze
+
+  def initialize
+    @output = ""
+    @wrong_output = []
   end
 
-  def self.select_params(param, type, output, wrong_output)
-    case type
-    when 'year'
-      year = param[5..-1]
-      output[0] = year
-    when 'month'
-      month = param[6..-1]
-      output[1] = month
-    when 'day'
-      day = param[4..-1]
-      output[2] = day
-    when 'hour'
-      hour = param[5..-1]
-      output[3] = hour
-    when 'minute'
-      minute = param[7..-1]
-      output[4] = minute
-    when 'second'
-      second = param[7..-1]
-      output[5] = second
+  def params_handler(params)
+    time_now = []
+    params.each do |param|
+      FORMATS[param] ? time_now[FORMATS[param][:order]] = FORMATS[param][:value] : @wrong_output << param
+    end
+
+    if @wrong_output.empty?
+      @output = Time.now.strftime(time_now.join('-'))
     else
-      wrong_output << type
+      @output = "Unknown time format #{@wrong_output}"
     end
   end
 
