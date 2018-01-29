@@ -1,22 +1,19 @@
 require_relative 'time_format_handler'
 
 class App
-  attr_accessor :status
-  attr_accessor :response
 
   def call(env)
-    req = Rack::Request.new(env)
-    params(req)
-    request(req)
+    @request = Rack::Request.new(env)
+    @response = Rack::Response.new
+    process_request
   end
 
   private
 
-  def request(req)
-    case req.path_info
+  def process_request
+    case @request.path_info
     when /time/
-      @status = @time_format_handler.wrong_output.empty? ? 200 : 400
-      [@status, headers, body]
+      process_time_request
     else
       [404, headers, ["Not found\n"]]
     end
@@ -27,15 +24,18 @@ class App
     { 'Content-Type' => 'text/plain'}
   end
 
-  def params(req)
-    params = req.params["format"].split(',')
+  def process_time_request
+    if @request.params["format"]
+      params = @request.params["format"].split(',')
 
-    @time_format_handler = TimeFormatHandler.new
-    @response = @time_format_handler.params_handler(params)
-  end
+      @time_format_handler = TimeFormatHandler.new
+      body = @time_format_handler.params_handler(params)
 
-  def body
-    ["#{@response}\n"]
+      @response.status = @time_format_handler.success? ? 200 : 400
+      [@response.status, headers, ["#{body}\n"]]
+    else
+      [400, headers, ["URL should have 'format' query string\n"]]
+    end
   end
 
 end

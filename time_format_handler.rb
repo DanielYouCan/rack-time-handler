@@ -1,7 +1,5 @@
 class TimeFormatHandler
 
-  attr_accessor :output, :wrong_output
-
   FORMATS = { "year" => { :value => "%Y", :order => 0 }, "month" => { :value => "%m", :order => 1 },
               "day" => { :value => "%d", :order => 2 }, "hour" => { :value => "%H", :order => 3 },
               "minute" => { :value => "%M", :order => 4 }, "second" => { :value => "%S",:order => 5 } }.freeze
@@ -22,6 +20,10 @@ class TimeFormatHandler
     else
       @output = "Unknown time format #{@wrong_output}"
     end
+  end
+
+  def success?
+    @wrong_output.empty?
   end
 
 end
